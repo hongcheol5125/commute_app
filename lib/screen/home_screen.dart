@@ -12,8 +12,8 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   // latitude - 위도  ,  longitude - 경도
   static final LatLng companyLatLng = LatLng(
-    37.5233273,
-    126.921252,
+    35.122339541881,
+    126.86703266041,
   ); // 코팩 회사가 여의도여서 여의도 위,경도 가져옴
 
   // 위치표시 변수
