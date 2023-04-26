@@ -11,6 +11,7 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   bool choolCheckDone = false;
+  GoogleMapController? mapController;
 
   // latitude - 위도  ,  longitude - 경도
   static final LatLng companyLatLng = LatLng(
@@ -61,9 +62,7 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: _RenderAppBar(
-        appBar: AppBar(),
-      ),
+      appBar: renderAppBar(),
       body: FutureBuilder<String>(
         // FutureBuilder는 future를 return 해주는 함수만 받을 수 있다.
         future: checkPermission(),
@@ -110,6 +109,7 @@ class _HomeScreenState extends State<HomeScreen> {
                               ? withinDistanceCircle
                               : notWithinDistanceCircle,
                       marker: marker,
+                      onMapCreated: onMapCreated,
                     ),
                     _ChoolCheckButton(
                       isWithinRange: isWithinRange,
@@ -128,6 +128,10 @@ class _HomeScreenState extends State<HomeScreen> {
         },
       ),
     );
+  }
+
+  onMapCreated(GoogleMapController controller) {
+    mapController = controller;
   }
 
   onChoolCheckPressed() async {
@@ -191,30 +195,54 @@ class _HomeScreenState extends State<HomeScreen> {
     return '위치 권한이 허가되었습니다.';
   }
 
-  // AppBar를 이렇게 쓸 수도 있음
-  // AppBar renderAppBar() {
-  //   return AppBar(
-  //     title: Text(
-  //       '오늘도 출근',
-  //       style: TextStyle(
-  //         color: Colors.blue,
-  //         fontWeight: FontWeight.w700,
-  //       ),
-  //     ),
-  //     backgroundColor: Colors.white,
-  //   );
-  // }
+  AppBar renderAppBar() {
+    return AppBar(
+      title: Text(
+        '오늘도 출근',
+        style: TextStyle(
+          color: Colors.blue,
+          fontWeight: FontWeight.w700,
+        ),
+      ),
+      backgroundColor: Colors.white,
+      actions: [
+        IconButton(
+          onPressed: () async {
+            // 현재위치를 가져와야하므로 async 씀
+            if (mapController == null) {
+              return;
+            }
+
+            final location = await Geolocator.getCurrentPosition();
+
+            mapController!.animateCamera(
+              CameraUpdate.newLatLng(LatLng(
+                location.latitude,
+                location.longitude,
+              )),
+            );
+          },
+          icon: Icon(
+            Icons.my_location,
+            color: Colors.blue,
+          ),
+        ),
+      ],
+    );
+  }
 }
 
 class _CustomGoogleMap extends StatelessWidget {
   final CameraPosition initialPosition;
   final Circle circle;
   final Marker marker;
+  final MapCreatedCallback onMapCreated;
 
   const _CustomGoogleMap(
       {required this.initialPosition,
       required this.circle,
       required this.marker,
+      required this.onMapCreated,
       super.key});
 
   @override
@@ -231,6 +259,7 @@ class _CustomGoogleMap extends StatelessWidget {
         myLocationButtonEnabled: false,
         circles: Set.from([circle]),
         markers: Set.from([marker]),
+        onMapCreated: onMapCreated,
       ),
     );
   }
@@ -276,35 +305,36 @@ class _ChoolCheckButton extends StatelessWidget {
   }
 }
 
+  // AppBar를 이렇게 쓸 수도 있음
 // 굳이 class로 만들지 않고  appBar 메소드로 만들어서 쓰면 훨씬 더 간단해!!!!
-class _RenderAppBar extends StatelessWidget implements PreferredSizeWidget {
-  final AppBar appBar;
+// class _RenderAppBar extends StatelessWidget implements PreferredSizeWidget {
+//   final AppBar appBar;
 
-  const _RenderAppBar({required this.appBar, super.key});
+//   const _RenderAppBar({required this.appBar, super.key});
 
-  @override
-  Widget build(BuildContext context) {
-    return AppBar(
-      title: Text(
-        '오늘도 출근',
-        style: TextStyle(
-          color: Colors.blue,
-          fontWeight: FontWeight.w700,
-        ),
-      ),
-      backgroundColor: Colors.white,
-      actions: [
-        IconButton(
-          onPressed: () {},
-          icon: Icon(
-            Icons.my_location,
-            color: Colors.blue,
-          ),
-        ),
-      ],
-    );
-  }
+//   @override
+//   Widget build(BuildContext context) {
+//     return AppBar(
+//       title: Text(
+//         '오늘도 출근',
+//         style: TextStyle(
+//           color: Colors.blue,
+//           fontWeight: FontWeight.w700,
+//         ),
+//       ),
+//       backgroundColor: Colors.white,
+//       actions: [
+//         IconButton(
+//           onPressed: () {},
+//           icon: Icon(
+//             Icons.my_location,
+//             color: Colors.blue,
+//           ),
+//         ),
+//       ],
+//     );
+//   }
 
-  @override
-  Size get preferredSize => Size.fromHeight(appBar.preferredSize.height);
-}
+//   @override
+//   Size get preferredSize => Size.fromHeight(appBar.preferredSize.height);
+// }
